@@ -91,6 +91,28 @@ lvim.plugins = {
 
 }
 
+lvim.plugins = {
+  {
+    "ruifm/gitlinker.nvim",
+    dependencies = "nvim-lua/plenary.nvim",
+    config = function()
+      require("gitlinker").setup({
+        callbacks = {
+          ["bitbucket.org"] = require("gitlinker.hosts").get_bitbucket_type_url,
+        },
+        -- Default action copies to clipboard
+        action_callback = require("gitlinker.actions").copy_to_clipboard,
+      })
+
+      -- Set keymaps
+      vim.api.nvim_set_keymap('n', '<leader>gl', '<cmd>lua require"gitlinker".get_buf_range_url("n")<cr>',
+        { silent = true, desc = "Copy git link" })
+      vim.api.nvim_set_keymap('v', '<leader>gl', '<cmd>lua require"gitlinker".get_buf_range_url("v")<cr>',
+        { silent = true, desc = "Copy git link selection" })
+    end,
+  },
+}
+
 local lspconfig = require('lspconfig')
 lspconfig.emmet_ls.setup({
   filetypes = {
