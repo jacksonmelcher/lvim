@@ -3,9 +3,30 @@
 -- Video Tutorials: https://www.youtube.com/watch?v=sFA9kX-Ud_c&list=PLhoH5vyxr6QqGu0i7tt_XoVK9v-KvZ3m6
 -- Forum: https://www.reddit.com/r/lunarvim/
 -- Discord: https://discord.com/invite/Xb9B4Ny
---
-lvim.format_on_save = true
+
 local formatters = require "lvim.lsp.null-ls.formatters"
+
+lvim.format_on_save = true
+vim.opt.relativenumber = true
+
+lvim.builtin.project.manual_mode = true
+
+lvim.builtin.nvimtree.setup = {
+  sync_root_with_cwd = false,
+  respect_buf_cwd = true,
+  update_focused_file = {
+    enable = false,
+  },
+  update_cwd = false,
+  renderer = {
+    group_empty = true, -- Example of other renderer options
+  },
+  view = {              -- Adjust view settings
+    side = "left",
+    width = 30,         -- Optionally set the width of the tree
+  },
+}
+
 formatters.setup {
   {
     name = "prettier",
@@ -86,12 +107,7 @@ lvim.plugins = {
     event = "VeryLazy",
     opts = {},
     config = function(_, opts) require 'lsp_signature'.setup(opts) end
-  }
-
-
-}
-
-lvim.plugins = {
+  },
   {
     "ruifm/gitlinker.nvim",
     dependencies = "nvim-lua/plenary.nvim",
