@@ -4,27 +4,21 @@
 -- Forum: https://www.reddit.com/r/lunarvim/
 -- Discord: https://discord.com/invite/Xb9B4Ny
 
+
+
 local formatters = require "lvim.lsp.null-ls.formatters"
 
 lvim.format_on_save = true
 vim.opt.relativenumber = true
 
 lvim.builtin.project.manual_mode = true
-lvim.builtin.nvimtree.setup = {
-  sync_root_with_cwd = false,
-  respect_buf_cwd = true,
-  update_focused_file = {
-    enable = false,
-  },
-  update_cwd = false,
-  renderer = {
-    group_empty = true, -- Example of other renderer options
-  },
-  view = {              -- Adjust view settings
-    side = "left",
-    width = 30,         -- Optionally set the width of the tree
-  },
-}
+
+-- lvim.builtin.nvimtree.setup.view.side = "left"
+-- lvim.builtin.nvimtree.setup.renderer.icons.show.git = false
+-- lvim.builtin.nvimtree.setup.hijack_directories.enable = false
+-- lvim.builtin.nvimtree.setup.update_cwd = false
+-- lvim.builtin.nvimtree.setup.respect_buf_cwd = false
+-- vim.builtin.nvimtree.setup.filters.git_ignored = false
 
 formatters.setup {
   {
@@ -37,6 +31,11 @@ formatters.setup {
     filetypes = { "typescript", "typescriptreact", "javascript", "javascriptreact", "jsonc", "css" },
   },
 }
+
+lvim.keys.normal_mode["<C-w>m"] = ":WindowsMaximize<CR>"
+lvim.keys.normal_mode["<C-w>_"] = ":WindowsMaximizeVertically<CR>"
+lvim.keys.normal_mode["<C-w>|"] = ":WindowsMaximizeHorizontally<CR>"
+lvim.keys.normal_mode["<C-w>="] = ":WindowsEqualize<CR>"
 
 -- TMUX NAVIGATOR
 vim.keymap.set("n", "<C-h>", "<cmd> TmuxNavigateLeft<cr>", { noremap = true, silent = true, desc = "window left" })
@@ -64,13 +63,6 @@ vim.keymap.set(
   '"_diw',
   { noremap = true, silent = true, desc = "Delete in word without overwriting clipboard" })
 
--- Organize imports
-vim.keymap.set("n", "<leader>lo", function()
-  vim.lsp.buf.execute_command({
-    command = "_typescript.organizeImports",
-    arguments = { vim.api.nvim_buf_get_name(0) }
-  })
-end, { noremap = true, silent = true, desc = "Organize Imports" })
 
 lvim.builtin.which_key.mappings["l"]["o"] = {
   function()
@@ -108,6 +100,11 @@ lvim.plugins = {
     config = function(_, opts) require 'lsp_signature'.setup(opts) end
   },
   {
+    "ThePrimeagen/harpoon",
+    branch = "harpoon2",
+    dependencies = { "nvim-lua/plenary.nvim" }
+  },
+  {
     "ruifm/gitlinker.nvim",
     dependencies = "nvim-lua/plenary.nvim",
     config = function()
@@ -126,6 +123,31 @@ lvim.plugins = {
         { silent = true, desc = "Copy git link selection" })
     end,
   },
+  {
+    "anuvyklack/windows.nvim",
+    dependencies = {
+      "anuvyklack/middleclass",
+      "anuvyklack/animation.nvim"
+    },
+    config = function()
+      vim.o.winwidth = 10
+      vim.o.winminwidth = 10
+      vim.o.equalalways = false
+      require('windows').setup({
+        animation = {
+          enable = true,
+          duration = 100,
+        },
+        autowidth = {
+          enable = true,
+          winwidth = 0.8, -- percentage of total width
+          filetype = {
+            help = 0.5,
+          }
+        }
+      })
+    end,
+  }
 }
 
 local lspconfig = require('lspconfig')
