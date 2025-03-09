@@ -13,12 +13,16 @@ vim.opt.relativenumber = true
 
 lvim.builtin.project.manual_mode = true
 
--- lvim.builtin.nvimtree.setup.view.side = "left"
--- lvim.builtin.nvimtree.setup.renderer.icons.show.git = false
--- lvim.builtin.nvimtree.setup.hijack_directories.enable = false
--- lvim.builtin.nvimtree.setup.update_cwd = false
--- lvim.builtin.nvimtree.setup.respect_buf_cwd = false
+lvim.builtin.nvimtree.setup.view.side = "left"
+lvim.builtin.nvimtree.setup.renderer.icons.show.git = false
+lvim.builtin.nvimtree.setup.hijack_directories.enable = false
+lvim.builtin.nvimtree.setup.update_cwd = false
+lvim.builtin.nvimtree.setup.respect_buf_cwd = false
 -- vim.builtin.nvimtree.setup.filters.git_ignored = false
+lvim.builtin.treesitter.fold = true -- Enable treesitter folding
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+vim.opt.foldlevel = 99 -- Start with all folds open
 
 formatters.setup {
   {
@@ -32,11 +36,22 @@ formatters.setup {
   },
 }
 
-lvim.keys.normal_mode["<C-w>m"] = ":WindowsMaximize<CR>"
-lvim.keys.normal_mode["<C-w>_"] = ":WindowsMaximizeVertically<CR>"
-lvim.keys.normal_mode["<C-w>|"] = ":WindowsMaximizeHorizontally<CR>"
-lvim.keys.normal_mode["<C-w>="] = ":WindowsEqualize<CR>"
-
+-- lvim.keys.normal_mode["<C-w>m"] = ":WindowsMaximize<CR>"
+-- lvim.keys.normal_mode["<C-w>_"] = ":WindowsMaximizeVertically<CR>"
+-- lvim.keys.normal_mode["<C-w>|"] = ":WindowsMaximizeHorizontally<CR>"
+-- lvim.keys.normal_mode["<C-w>="] = ":WindowsEqualize<CR>"
+lvim.builtin.cmp.formatting = {
+  format = function(entry, vim_item)
+    vim_item.kind = lvim.icons.kind[vim_item.kind]
+    vim_item.menu = ({
+      nvim_lsp = "[LSP]",
+      luasnip = "[Snip]",
+      buffer = "[Buf]",
+      path = "[Path]",
+    })[entry.source.name]
+    return vim_item
+  end,
+}
 -- TMUX NAVIGATOR
 vim.keymap.set("n", "<C-h>", "<cmd> TmuxNavigateLeft<cr>", { noremap = true, silent = true, desc = "window left" })
 vim.keymap.set("n", "<C-l>", "<cmd> TmuxNavigateRight<cr>", { noremap = true, silent = true, desc = "window right" })
@@ -100,11 +115,6 @@ lvim.plugins = {
     config = function(_, opts) require 'lsp_signature'.setup(opts) end
   },
   {
-    "ThePrimeagen/harpoon",
-    branch = "harpoon2",
-    dependencies = { "nvim-lua/plenary.nvim" }
-  },
-  {
     "ruifm/gitlinker.nvim",
     dependencies = "nvim-lua/plenary.nvim",
     config = function()
@@ -124,49 +134,54 @@ lvim.plugins = {
     end,
   },
   {
-    "anuvyklack/windows.nvim",
-    dependencies = {
-      "anuvyklack/middleclass",
-      "anuvyklack/animation.nvim"
-    },
+    "L3MON4D3/LuaSnip",
+    version = "v2.*",
+    dependencies = { "rafamadriz/friendly-snippets" },
     config = function()
-      vim.o.winwidth = 10
-      vim.o.winminwidth = 10
-      vim.o.equalalways = false
-      require('windows').setup({
-        animation = {
-          enable = true,
-          duration = 100,
-        },
-        autowidth = {
-          enable = true,
-          winwidth = 0.8, -- percentage of total width
-          filetype = {
-            help = 0.5,
-          }
-        }
+      require("luasnip").config.set_config({
+        history = true,
+        updateevents = "TextChanged,TextChangedI",
       })
+      require("luasnip.loaders.from_vscode").lazy_load()
     end,
-  }
-}
-
-local lspconfig = require('lspconfig')
-lspconfig.emmet_ls.setup({
-  filetypes = {
-    "html",
-    "typescriptreact",
-    "javascriptreact",
-    "css",
-    "sass",
-    "scss",
-    "less",
-    "tsx"
   },
-  init_options = {
-    html = {
-      options = {
-        ["bem.enabled"] = true,
-      },
-    },
-  }
-})
+  {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    config = function()
+      local autopairs = require("nvim-autopairs")
+      autopairs.setup({
+        check_ts = true,
+        ts_config = {
+          lua = { "string" },
+          javascript = { "template_string" },
+          java = false,
+        },
+        enable_check_bracket_line = true,
+        fast_wrap = {
+          map = "<M-e>",
+          chars = { "{", "[", "(", '"', "'" },
+          pattern = string.gsub([[ [%'%"%)%>%]%)%}%,] ]], "%s+", ""),
+          offset = 0,
+          end_key = "$",
+          keys = "qwertyuiopzxcvbnmasdfghjkl",
+          check_comma = true,
+          highlight = "PmenuSel",
+          highlight_grey = "LineNr",
+        },
+      })
+
+      -- Make autopairs and completion work together
+      local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+      local cmp = require("cmp")
+      cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+    end,
+  },
+  {
+    "windwp/nvim-ts-autotag",
+    dependencies = "nvim-treesitter/nvim-treesitter",
+    config = function()
+      require("nvim-ts-autotag").setup()
+    end,
+  },
+}
